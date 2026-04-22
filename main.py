@@ -9,7 +9,7 @@ from db import (
     row_exists_messages,
     row_exists_tables_data,
 )
-from sql_builder import sql_for_messages, sql_for_tables_data
+from sql_builder import sql_for_messages, sql_for_tables_data, UNICODE_REPLACEMENTS
 from file_loader import load_files_from_folder
 
 
@@ -129,11 +129,16 @@ def make_changes(cursor, folder_path, file_map, script_file):
 
                 message_key = str(row.MESSAGE_KEY)
                 default_value = str(row.DEF_VALUE)
-                safe_text = translation_text.replace('&', 'and')
+                safe_text = translation_text if any(c != '&' for c in translation_text) else translation_text.replace('&', 'and')
                 exists = message_key in existing_keys
+                sql_stmt = sql_for_messages('BALADY', message_key, default_value, safe_text, exists)
+                sql_buffer.write(sql_stmt + "\n")
 
-                batch.append(('BALADY', message_key, default_value, safe_text))
-                sql_buffer.write(sql_for_messages('BALADY', message_key, default_value, safe_text, exists) + "\n")
+                if any(ch in safe_text for ch in UNICODE_REPLACEMENTS):
+                    _flush_batch(cursor, MERGE_MESSAGES, batch)
+                    cursor.execute(sql_stmt.rstrip(';'))
+                else:
+                    batch.append(('BALADY', message_key, default_value, safe_text))
 
                 if exists:
                     updated += 1
@@ -158,11 +163,16 @@ def make_changes(cursor, folder_path, file_map, script_file):
                     continue
 
                 row_id = str(row[0])
-                safe_text = translation_text.replace('&', 'and')
+                safe_text = translation_text if any(c != '&' for c in translation_text) else translation_text.replace('&', 'and')
                 exists = row_id in existing_keys
+                sql_stmt = sql_for_tables_data(table_name, row_id, cl_name, safe_text, exists)
+                sql_buffer.write(sql_stmt + "\n")
 
-                batch.append((table_name, row_id, cl_name, safe_text))
-                sql_buffer.write(sql_for_tables_data(table_name, row_id, cl_name, safe_text, exists) + "\n")
+                if any(ch in safe_text for ch in UNICODE_REPLACEMENTS):
+                    _flush_batch(cursor, MERGE_TABLES_DATA, batch)
+                    cursor.execute(sql_stmt.rstrip(';'))
+                else:
+                    batch.append((table_name, row_id, cl_name, safe_text))
 
                 if exists:
                     updated += 1

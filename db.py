@@ -4,14 +4,13 @@ import oracledb
 # ---------------------------------------------------------------------------
 # DB connection
 # ---------------------------------------------------------------------------
+host = "RUHMPP-EXA-SCAN.MOMRA.NET"
+port = 1521
+service_name = "HIGH_QSMDEV.MOMRA.NET"
+username = "BALADY"
+password = "balady"
 
 def connect_to_oracle():
-    host = "RUHMPP-EXA-SCAN.MOMRA.NET"
-    port = 1521
-    service_name = "HIGH_QSMDEV.MOMRA.NET"
-    username = "BALADY"
-    password = "balady"
-
     dsn = f"{host}:{port}/{service_name}"
     return oracledb.connect(user=username, password=password, dsn=dsn)
 
