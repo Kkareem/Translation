@@ -204,7 +204,7 @@ if __name__ == '__main__':
         print("Invalid path. Please try again.")
         folder_path = input("Enter the folder path containing the translation files: ").strip()
 
-    file_name = input("Enter the Excel file name: ").strip()
+    file_name = input("Enter the script file name: ").strip()
     need_flush = input("Do you want to flush the buffer? (y/n): ").strip().lower() == 'y'
     file_map = load_files_from_folder(folder_path)
     connection = connect_to_oracle()
